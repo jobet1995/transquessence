@@ -8,6 +8,7 @@
     "start": "next start",
     "lint": "eslint",
     "prepare": "husky",
+    "cypress:open": "cypress open",
     "test": "jest"
   },
   "dependencies": {
@@ -68,6 +69,7 @@
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "cypress": "^15.3.0",
     "eslint": "^9",
     "eslint-config-next": "15.5.4",
     "husky": "^9.1.7",

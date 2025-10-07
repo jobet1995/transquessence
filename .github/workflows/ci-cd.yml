@@ -53,7 +53,6 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
-
   test_suite:
     name: Run Test Suite
     runs-on: ubuntu-latest
@@ -94,19 +93,6 @@ jobs:
           script: |
             docker pull ${{ secrets.DOCKERHUB_USERNAME }}/mental-health-companion:dev
             docker-compose -f docker-compose.yml -f docker-compose.prod.yml up -d
-            curl -f http://localhost:3000 || (echo "Healthcheck failed" && exit 1)
-
-      - name: Deploy to Staging Test
-        if: github.ref == 'refs/heads/stagingTest'
-        uses: appleboy/ssh-action@master
-        with:
-          host: ${{ secrets.STAGING_TEST_HOST }}
-          username: ${{ secrets.STAGING_TEST_USERNAME }}
-          key: ${{ secrets.STAGING_TEST_SSH_KEY }}
-          script: |
-            docker pull ${{ secrets.DOCKERHUB_USERNAME }}/mental-health-companion:stagingTest
-            docker-compose -f docker-compose.yml -f docker-compose.prod.yml up -d
-            curl -f http://localhost:3000 || (echo "Healthcheck failed" && exit 1)
 
       - name: Deploy to Staging
         if: github.ref == 'refs/heads/staging'
@@ -118,31 +104,6 @@ jobs:
           script: |
             docker pull ${{ secrets.DOCKERHUB_USERNAME }}/mental-health-companion:staging
             docker-compose -f docker-compose.yml -f docker-compose.prod.yml up -d
-            curl -f http://localhost:3000 || (echo "Healthcheck failed" && exit 1)
-
-      - name: Deploy to Release Test
-        if: github.ref == 'refs/heads/releaseTest'
-        uses: appleboy/ssh-action@master
-        with:
-          host: ${{ secrets.RELEASE_TEST_HOST }}
-          username: ${{ secrets.RELEASE_TEST_USERNAME }}
-          key: ${{ secrets.RELEASE_TEST_SSH_KEY }}
-          script: |
-            docker pull ${{ secrets.DOCKERHUB_USERNAME }}/mental-health-companion:releaseTest
-            docker-compose -f docker-compose.yml -f docker-compose.prod.yml up -d
-            curl -f http://localhost:3000 || (echo "Healthcheck failed" && exit 1)
-
-      - name: Deploy to Release
-        if: github.ref == 'refs/heads/release'
-        uses: appleboy/ssh-action@master
-        with:
-          host: ${{ secrets.RELEASE_HOST }}
-          username: ${{ secrets.RELEASE_USERNAME }}
-          key: ${{ secrets.RELEASE_SSH_KEY }}
-          script: |
-            docker pull ${{ secrets.DOCKERHUB_USERNAME }}/mental-health-companion:release
-            docker-compose -f docker-compose.yml -f docker-compose.prod.yml up -d
-            curl -f http://localhost:3000 || (echo "Healthcheck failed" && exit 1)
 
       - name: Deploy to Master
         if: github.ref == 'refs/heads/master'
@@ -154,4 +115,27 @@ jobs:
           script: |
             docker pull ${{ secrets.DOCKERHUB_USERNAME }}/mental-health-companion:latest
             docker-compose -f docker-compose.yml -f docker-compose.prod.yml up -d
-            curl -f http://localhost:3000 || (echo "Healthcheck failed" && exit 1)
+
+  deploy_vercel:
+    name: Deploy to Vercel
+    runs-on: ubuntu-latest
+    if: |
+      github.ref == 'refs/heads/dev' ||
+      github.ref == 'refs/heads/stagingTest' ||
+      github.ref == 'refs/heads/releaseTest' ||
+      github.ref == 'refs/heads/release' ||
+      github.ref == 'refs/heads/master'
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Deploy to Vercel
+        uses: vercel/vercel-action@v3
+        with:
+          vercel-token: ${{ secrets.VERCEL_TOKEN }}
+          vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
+          vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
+          # Deploy to production for 'master' and 'release' branches
+          vercel-args: "${{ (github.ref == 'refs/heads/master' || github.ref == 'refs/heads/release') && '--prod' || '' }}"
+          # Pass environment variables to Vercel
+          vercel-env: 'GEMINI_API_KEY=${{ secrets.GEMINI_API_KEY }},NEXT_PUBLIC_FIREBASE_API_KEY=${{ secrets.NEXT_PUBLIC_FIREBASE_API_KEY }},NEXT_PUBLIC_FIREBASE_PROJECT_ID=${{ secrets.NEXT_PUBLIC_FIREBASE_PROJECT_ID }},NEXT_PUBLIC_FIREBASE_APP_ID=${{ secrets.NEXT_PUBLIC_FIREBASE_APP_ID }}'

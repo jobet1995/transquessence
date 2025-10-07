@@ -90,9 +90,16 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Deploy to Vercel
-        uses: amondnet/vercel-action@v25
-        with:
-          vercel-token: ${{ secrets.VERCEL_TOKEN }}
-          vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
-          vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
-          vercel-args: ${{ (github.ref == 'refs/heads/master' || github.ref == 'refs/heads/release') && '--prod' || '' }}
+        run: |
+          # Install Vercel CLI
+          npm i -g vercel
+
+          # Deploy based on branch
+          BRANCH_NAME=$(echo ${{ github.ref }} | sed 's|refs/heads/||')
+          if [[ "$BRANCH_NAME" == "master" ]] || [[ "$BRANCH_NAME" == "release" ]]; then
+            echo "🚀 Deploying to production..."
+            npx vercel --token ${{ secrets.VERCEL_TOKEN }} --yes --prod
+          else
+            echo "🚀 Deploying to preview..."
+            npx vercel --token ${{ secrets.VERCEL_TOKEN }} --yes
+          fi

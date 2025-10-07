@@ -9,7 +9,7 @@
     "lint": "eslint",
     "prepare": "husky",
     "cypress:open": "cypress open",
-    "test": "vitest run",
+    "test": "jest",
     "storybook": "storybook dev -p 6006",
     "build-storybook": "storybook build"
   },

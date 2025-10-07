@@ -8,6 +8,10 @@ WORKDIR /app
 COPY package*.json ./
 RUN npm install
 
+# Install dependencies for the functions directory
+COPY functions/package*.json ./functions/
+RUN npm --prefix functions install
+
 COPY . .
 RUN npm run build
 

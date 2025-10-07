@@ -9,7 +9,7 @@ WORKDIR /app
 COPY . .
 
 # Install all dependencies from the single root package.json
-RUN npm install
+RUN npm install --legacy-peer-deps
 
 # Run the build
 RUN npm run build
